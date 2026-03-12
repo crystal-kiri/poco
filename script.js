@@ -497,6 +497,52 @@
     observer.observe(pCanvas.parentElement);
 })();
 
+// ===== Floating Pop Objects =====
+(() => {
+    const emojis = ['💭','💬','✨','💫','🫧','💗','🌟','⭐','💛','🧡','💜','🩵','🤍','☁️','🪄'];
+    const container = document.createElement('div');
+    container.className = 'floating-objects-container';
+    document.body.appendChild(container);
+
+    const count = 30;
+    for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'pop-object';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // Random depth: front (big, clear) or back (small, blurry)
+        const isFront = Math.random() > 0.6;
+        const size = isFront
+            ? (Math.random() * 1.2 + 1.0) + 'rem'
+            : (Math.random() * 0.8 + 0.5) + 'rem';
+        const opacity = isFront
+            ? (Math.random() * 0.2 + 0.15)
+            : (Math.random() * 0.12 + 0.06);
+        const blur = isFront ? '0px' : (Math.random() * 2 + 1) + 'px';
+
+        el.style.setProperty('--size', size);
+        el.style.setProperty('--opa', opacity);
+        el.style.setProperty('--blur', blur);
+        el.style.setProperty('--duration', (Math.random() * 4 + 5) + 's');
+        el.style.setProperty('--delay', -(Math.random() * 8) + 's');
+        el.style.left = (Math.random() * 95) + '%';
+        el.style.top = (Math.random() * 90) + '%';
+        el.style.zIndex = isFront ? '3' : '0';
+
+        container.appendChild(el);
+    }
+
+    // Parallax: move objects slightly on scroll for depth
+    window.addEventListener('scroll', () => {
+        const sy = window.scrollY;
+        container.querySelectorAll('.pop-object').forEach(el => {
+            const isFront = el.style.zIndex === '3';
+            const speed = isFront ? 0.03 : 0.01;
+            el.style.transform = `translateY(${sy * -speed}px)`;
+        });
+    });
+})();
+
 // ===== Header Scroll =====
 const header = document.getElementById('header');
 window.addEventListener('scroll', () => {

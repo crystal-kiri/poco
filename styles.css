@@ -575,6 +575,35 @@ body.loaded .hero .letter-reveal span {
     transform: none !important;
 }
 
+/* ===== Floating Pop Objects ===== */
+.floating-objects-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.pop-object {
+    position: absolute;
+    will-change: transform;
+    animation: popFloat var(--duration) ease-in-out infinite;
+    animation-delay: var(--delay);
+    opacity: var(--opa);
+    font-size: var(--size);
+    filter: blur(var(--blur));
+}
+
+@keyframes popFloat {
+    0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+    20%  { transform: translate(6px, -14px) rotate(5deg) scale(1.04); }
+    40%  { transform: translate(-8px, -22px) rotate(-3deg) scale(0.97); }
+    60%  { transform: translate(4px, -10px) rotate(6deg) scale(1.02); }
+    80%  { transform: translate(-5px, -18px) rotate(-4deg) scale(0.98); }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
 /* ===== GPU acceleration ===== */
 .char-card,
 .step-card,
@@ -628,7 +657,8 @@ body.loaded .hero .letter-reveal span {
     }
 
     .floating-deco,
-    .floating-star {
+    .floating-star,
+    .floating-objects-container {
         display: none;
     }
 
