@@ -501,12 +501,43 @@
 (() => {
     const colors = ['#FF8C42','#FFB347','#34D399','#10B981','#A78BFA','#C4B5FD','#F9A8D4','#FCD34D'];
 
+    // Secondary colors for gradients
+    const colors2 = ['#FFB347','#FF8C42','#10B981','#34D399','#C4B5FD','#A78BFA','#FCD34D','#F9A8D4'];
+
     const shapes = [
-        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;background:${c};`; return el; },
-        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;border:${Math.max(2,s*0.18)}px solid ${c};background:transparent;`; return el; },
-        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;background:${c};border-radius:${s*0.15}px;`; return el; },
-        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;background:${c};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);`; return el; },
-        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;background:${c};clip-path:polygon(50% 10%,90% 85%,10% 85%);`; return el; },
+        // Glowing orb (gradient + box-shadow glow)
+        (c, s, i) => {
+            const c2 = colors2[i % colors2.length];
+            const el = document.createElement('div');
+            el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,0.6),${c} 50%,${c2} 100%);box-shadow:0 0 ${s*0.6}px ${s*0.15}px ${c}44;`;
+            return el;
+        },
+        // Glass circle (glassmorphism)
+        (c, s) => {
+            const el = document.createElement('div');
+            el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.3);box-shadow:0 0 ${s*0.4}px ${c}33,inset 0 0 ${s*0.3}px rgba(255,255,255,0.15);`;
+            return el;
+        },
+        // Gradient ring (glowing outline)
+        (c, s, i) => {
+            const c2 = colors2[i % colors2.length];
+            const el = document.createElement('div');
+            el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;border:${Math.max(2,s*0.12)}px solid transparent;background:linear-gradient(rgba(255,255,255,0.05),rgba(255,255,255,0.05)) padding-box,linear-gradient(135deg,${c},${c2}) border-box;box-shadow:0 0 ${s*0.4}px ${c}22;`;
+            return el;
+        },
+        // Soft diamond (rounded, gradient)
+        (c, s, i) => {
+            const c2 = colors2[i % colors2.length];
+            const el = document.createElement('div');
+            el.style.cssText = `width:${s}px;height:${s}px;background:linear-gradient(135deg,${c},${c2});border-radius:${s*0.2}px;box-shadow:0 0 ${s*0.5}px ${c}33;`;
+            return el;
+        },
+        // Star with glow
+        (c, s) => {
+            const el = document.createElement('div');
+            el.style.cssText = `width:${s}px;height:${s}px;background:linear-gradient(135deg,${c},rgba(255,255,255,0.8));clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 ${s*0.3}px ${c}55);`;
+            return el;
+        },
     ];
 
     const container = document.createElement('div');
@@ -549,7 +580,7 @@
         }
         const color = colors[Math.floor(Math.random() * colors.length)];
         const shapeFn = shapes[Math.floor(Math.random() * shapes.length)];
-        const el = shapeFn(color, baseSize);
+        const el = shapeFn(color, baseSize, i);
 
         el.classList.add('pop-object');
         el.style.opacity = opacity;

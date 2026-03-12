@@ -23,6 +23,18 @@ body::before {
     animation: crystalDrift 20s ease-in-out infinite alternate;
 }
 
+/* ===== Dot Grid Overlay (tech feel) ===== */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
 @keyframes crystalDrift {
     0% { transform: translate(0, 0) rotate(0deg); }
     25% { transform: translate(3%, -2%) rotate(1deg); }
@@ -49,62 +61,77 @@ body {
     pointer-events: none; z-index: 9999;
 }
 
-/* ===== Button Primary (Crystal outline) ===== */
+/* ===== Button Primary (Text only → orbiting light on hover) ===== */
+@property --btn-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
 .btn-primary {
     position: relative;
     background: transparent;
     border: none;
     color: #4A4A5A !important;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.06));
-    transition: all 0.4s ease;
+    filter: none;
+    transition: filter 0.5s ease, color 0.3s ease;
     border-radius: 0;
     z-index: 1;
+    --btn-angle: 0deg;
 }
 
-/* Gradient border shape */
+/* Orbiting light border (mask-based, fully transparent inside) */
 .btn-primary::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, #FF8C42, #FFB347, #34D399, #10B981);
+    background: transparent;
     clip-path: polygon(14px 0%, calc(100% - 14px) 0%, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0% calc(100% - 14px), 0% 14px);
-    z-index: -2;
-}
-
-/* Inner fill */
-.btn-primary::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    clip-path: polygon(13px 0%, calc(100% - 13px) 0%, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0% calc(100% - 13px), 0% 13px);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 2px;
     z-index: -1;
-}
-
-.btn-primary:hover {
-    filter: drop-shadow(0 4px 16px rgba(52,211,153,0.2));
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
 .btn-primary:hover::before {
-    clip-path: polygon(18px 0%, calc(100% - 18px) 0%, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0% calc(100% - 18px), 0% 18px);
+    opacity: 1;
+    background: conic-gradient(
+        from var(--btn-angle),
+        transparent 0%,
+        #FF8C4200 5%,
+        #FF8C42 10%,
+        #FFB347 18%,
+        #34D399 26%,
+        #10B981 34%,
+        #A78BFA 42%,
+        #A78BFA00 48%,
+        transparent 50%,
+        transparent 100%
+    );
+    animation: btnOrbit 1.8s linear infinite;
 }
 
-.btn-primary:hover::after {
-    inset: 2px;
-    background: rgba(255,255,255,0.97);
-    clip-path: polygon(17px 0%, calc(100% - 17px) 0%, 100% 17px, 100% calc(100% - 17px), calc(100% - 17px) 100%, 17px 100%, 0% calc(100% - 17px), 0% 17px);
+@keyframes btnOrbit {
+    to { --btn-angle: 360deg; }
 }
 
-/* ===== Pulse Glow (crystal shimmer) ===== */
+.btn-primary:hover {
+    filter: drop-shadow(0 4px 24px rgba(52,211,153,0.2)) drop-shadow(0 0 10px rgba(255,140,66,0.12));
+}
+
+/* ===== Pulse Glow (subtle text hint) ===== */
 .pulse-glow {
     animation: pulseGlow 3s ease-in-out infinite;
 }
 
 @keyframes pulseGlow {
-    0%, 100% { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.06)); }
-    50% { filter: drop-shadow(0 6px 20px rgba(52,211,153,0.15)); }
+    0%, 100% { text-shadow: 0 0 0 transparent; }
+    50% { text-shadow: 0 0 20px rgba(52,211,153,0.15); }
 }
 
 /* ===== Header ===== */
