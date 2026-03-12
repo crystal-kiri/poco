@@ -497,50 +497,146 @@
     observer.observe(pCanvas.parentElement);
 })();
 
-// ===== Floating Pop Objects =====
+// ===== Floating Pop Objects (CSS shapes, complex motion) =====
 (() => {
-    const emojis = ['💭','💬','✨','💫','🫧','💗','🌟','⭐','💛','🧡','💜','🩵','🤍','☁️','🪄'];
+    const colors = ['#FF8C42','#FFB347','#34D399','#10B981','#A78BFA','#C4B5FD','#F9A8D4','#FCD34D'];
+
+    const shapes = [
+        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;background:${c};`; return el; },
+        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;border-radius:50%;border:${Math.max(2,s*0.18)}px solid ${c};background:transparent;`; return el; },
+        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;background:${c};border-radius:${s*0.15}px;`; return el; },
+        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;background:${c};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);`; return el; },
+        (c, s) => { const el = document.createElement('div'); el.style.cssText = `width:${s}px;height:${s}px;background:${c};clip-path:polygon(50% 10%,90% 85%,10% 85%);`; return el; },
+    ];
+
     const container = document.createElement('div');
     container.className = 'floating-objects-container';
     document.body.appendChild(container);
 
-    const count = 30;
-    for (let i = 0; i < count; i++) {
-        const el = document.createElement('span');
-        el.className = 'pop-object';
-        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    const items = [];
+    const count = 38;
 
-        // Random depth: front (big, clear) or back (small, blurry)
-        const isFront = Math.random() > 0.6;
-        const size = isFront
-            ? (Math.random() * 1.2 + 1.0) + 'rem'
-            : (Math.random() * 0.8 + 0.5) + 'rem';
-        const opacity = isFront
-            ? (Math.random() * 0.2 + 0.15)
-            : (Math.random() * 0.12 + 0.06);
-        const blur = isFront ? '0px' : (Math.random() * 2 + 1) + 'px';
-
-        el.style.setProperty('--size', size);
-        el.style.setProperty('--opa', opacity);
-        el.style.setProperty('--blur', blur);
-        el.style.setProperty('--duration', (Math.random() * 4 + 5) + 's');
-        el.style.setProperty('--delay', -(Math.random() * 8) + 's');
-        el.style.left = (Math.random() * 95) + '%';
-        el.style.top = (Math.random() * 90) + '%';
-        el.style.zIndex = isFront ? '3' : '0';
-
-        container.appendChild(el);
+    // Create orbit groups (clusters that rotate around a center)
+    const orbitGroups = [];
+    for (let g = 0; g < 4; g++) {
+        orbitGroups.push({
+            cx: Math.random() * 80 + 10, // center % position
+            cy: Math.random() * 80 + 5,
+            radius: Math.random() * 40 + 25, // px orbit radius
+            speed: (Math.random() * 0.008 + 0.003) * (Math.random() > 0.5 ? 1 : -1),
+            members: [],
+        });
     }
 
-    // Parallax: move objects slightly on scroll for depth
-    window.addEventListener('scroll', () => {
+    for (let i = 0; i < count; i++) {
+        const layer = Math.random();
+        let baseSize, opacity, blur, zIdx;
+        if (layer < 0.25) {
+            baseSize = Math.random() * 10 + 5;
+            opacity = Math.random() * 0.12 + 0.04;
+            blur = Math.random() * 3 + 1;
+            zIdx = 0;
+        } else if (layer < 0.65) {
+            baseSize = Math.random() * 25 + 14;
+            opacity = Math.random() * 0.2 + 0.1;
+            blur = Math.random() * 1;
+            zIdx = 1;
+        } else {
+            baseSize = Math.random() * 55 + 30;
+            opacity = Math.random() * 0.15 + 0.08;
+            blur = 0;
+            zIdx = 3;
+        }
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const shapeFn = shapes[Math.floor(Math.random() * shapes.length)];
+        const el = shapeFn(color, baseSize);
+
+        el.classList.add('pop-object');
+        el.style.opacity = opacity;
+        el.style.filter = blur ? `blur(${blur}px)` : '';
+        el.style.zIndex = zIdx;
+        el.style.position = 'absolute';
+
+        const startX = Math.random() * 94 + 1;
+        const startY = Math.random() * 88 + 2;
+
+        container.appendChild(el);
+
+        // Decide behavior: orbit (30%) or free float (70%)
+        const isOrbiter = Math.random() < 0.3;
+        const item = {
+            el, zIdx, startX, startY, x: 0, y: 0, rot: 0,
+            // Unique frequencies for irregular motion (3 layered sine waves)
+            freqX1: Math.random() * 0.006 + 0.002,
+            freqY1: Math.random() * 0.007 + 0.002,
+            freqX2: Math.random() * 0.015 + 0.005,
+            freqY2: Math.random() * 0.013 + 0.005,
+            freqX3: Math.random() * 0.003 + 0.001,
+            freqY3: Math.random() * 0.004 + 0.001,
+            ampX1: Math.random() * 30 + 15,
+            ampY1: Math.random() * 25 + 12,
+            ampX2: Math.random() * 12 + 5,
+            ampY2: Math.random() * 10 + 4,
+            ampX3: Math.random() * 50 + 20,
+            ampY3: Math.random() * 40 + 15,
+            phaseX: Math.random() * Math.PI * 2,
+            phaseY: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.3,
+            scaleBase: 1,
+            scaleFreq: Math.random() * 0.004 + 0.001,
+            scaleAmp: Math.random() * 0.08 + 0.02,
+            isOrbiter,
+            orbitAngle: Math.random() * Math.PI * 2,
+            orbitGroup: null,
+        };
+
+        if (isOrbiter) {
+            const g = orbitGroups[Math.floor(Math.random() * orbitGroups.length)];
+            item.orbitGroup = g;
+            item.startX = g.cx;
+            item.startY = g.cy;
+            g.members.push(item);
+        }
+
+        items.push(item);
+    }
+
+    let t = 0;
+    function tick() {
+        t++;
         const sy = window.scrollY;
-        container.querySelectorAll('.pop-object').forEach(el => {
-            const isFront = el.style.zIndex === '3';
-            const speed = isFront ? 0.03 : 0.01;
-            el.style.transform = `translateY(${sy * -speed}px)`;
-        });
-    });
+        for (const item of items) {
+            let dx, dy;
+
+            if (item.isOrbiter && item.orbitGroup) {
+                const g = item.orbitGroup;
+                item.orbitAngle += g.speed + Math.sin(t * 0.01) * 0.002;
+                const orbitR = g.radius + Math.sin(t * 0.005 + item.phaseX) * 10;
+                dx = Math.cos(item.orbitAngle) * orbitR
+                   + Math.sin(t * item.freqX2 + item.phaseX) * item.ampX2;
+                dy = Math.sin(item.orbitAngle) * orbitR
+                   + Math.sin(t * item.freqY2 + item.phaseY) * item.ampY2;
+            } else {
+                // 3 layered sine waves = irregular, organic path
+                dx = Math.sin(t * item.freqX1 + item.phaseX) * item.ampX1
+                   + Math.sin(t * item.freqX2 + item.phaseX * 1.7) * item.ampX2
+                   + Math.sin(t * item.freqX3 + item.phaseX * 0.4) * item.ampX3;
+                dy = Math.sin(t * item.freqY1 + item.phaseY) * item.ampY1
+                   + Math.sin(t * item.freqY2 + item.phaseY * 1.3) * item.ampY2
+                   + Math.cos(t * item.freqY3 + item.phaseY * 0.6) * item.ampY3;
+            }
+
+            const rot = t * item.rotSpeed;
+            const sc = item.scaleBase + Math.sin(t * item.scaleFreq) * item.scaleAmp;
+            const parallax = item.zIdx === 3 ? sy * -0.06 : item.zIdx === 1 ? sy * -0.025 : sy * -0.008;
+
+            item.el.style.transform = `translate(${dx}px, ${dy + parallax}px) rotate(${rot}deg) scale(${sc})`;
+            item.el.style.left = item.startX + '%';
+            item.el.style.top = item.startY + '%';
+        }
+        requestAnimationFrame(tick);
+    }
+    tick();
 })();
 
 // ===== Header Scroll =====
